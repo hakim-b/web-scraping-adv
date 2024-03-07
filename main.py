@@ -83,7 +83,6 @@ def display_latest_deals():
 
 
 def count_by_category():
-    url = "https://forums.redflagdeals.com/"
     response = requests.get("https://forums.redflagdeals.com/hot-deals-f9/")
     response.raise_for_status()
     soup = BeautifulSoup(response.content, "html.parser")
@@ -120,7 +119,7 @@ def find_top_stores():
         else:
             store_count = {}
 
-            for listing in deals[:int(top_input)]:
+            for listing in deals[: int(top_input)]:
                 store = get_store(listing)
 
                 if store in store_count:
@@ -131,6 +130,81 @@ def find_top_stores():
             for store, count in store_count.items():
                 print(f"{store}: {count} deals")
 
+            break
+
+
+def log_deal_info():
+    response = requests.get("https://forums.redflagdeals.com/hot-deals-f9/")
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    categories = set()
+
+    for listing in soup.find_all("li", class_="row topic"):
+        category_element = listing.select_one(".thread_category a")
+        category = category_element.text.strip() if category_element else "N/A"
+        categories.add(category)
+
+    categories_list = list(categories)
+
+    print("\nList of Catgeories:\n")
+    for i, category in enumerate(categories_list):
+        print(f"{i + 1}. {category}")
+
+    while True:
+        category_number = get_number_input(
+            "Enter the number corresponding to the category: "
+        )
+        if category_number < 1 or category_number > len(categories_list):
+            print("Out of bounds.\n")
+        else:
+            corresp_category = categories_list[int(category_number) - 1]
+            deals = soup.find_all("li", class_="row topic")
+            base_url = "https://forums.redflagdeals.com/"
+
+            for listing in deals:
+                store = get_store(listing)
+
+                item_element = listing.select_one(".topic_title_link")
+                item = item_element.text.strip() if item_element else "N/A"
+
+                votes_element = listing.select_one(".total_count_selector")
+                votes = votes_element.text.strip() if votes_element else "N/A"
+
+                username_element = listing.select_one(".thread_meta_author")
+                username = username_element.text.strip() if username_element else "N/A"
+
+                timestamp_element = listing.select_one(".first-post-time")
+                timestamp = (
+                    timestamp_element.text.strip() if timestamp_element else "N/A"
+                )
+
+                category_element = listing.select_one(".thread_category a")
+                category = category_element.text.strip() if category_element else "N/A"
+
+                replies_element = listing.select_one(".posts")
+                replies = replies_element.text.strip() if replies_element else "N/A"
+
+                views_element = listing.select_one(".views")
+                views = views_element.text.strip() if views_element else "N/A"
+
+                url_element = item_element["href"] if item_element else "N/A"
+                url = base_url + url_element
+
+                if category == corresp_category:
+                    with open("./log.txt", "a") as file:
+                        file.write(f"Store: {store}\n")
+                        file.write(f"Item: {item}\n")
+                        file.write(f"Votes: {votes}\n")
+                        file.write(f"Username: {username}\n")
+                        file.write(f"Timestamp: {timestamp}\n")
+                        file.write(f"Category: {category}\n")
+                        file.write(f"Replies: {replies}\n")
+                        file.write(f"Views: {views}\n")
+                        file.write(f"Url: {url}\n")
+                        file.write("-------------------------\n")
+
+            print("All the links have been logged sucessfully\n")
             break
 
 
@@ -161,6 +235,9 @@ def main():
         elif choice == 1:
             print()
             display_latest_deals()
+            print(".")
+            print(".")
+            print(".")
         elif choice == 2:
             print()
             count_by_category()
@@ -169,7 +246,7 @@ def main():
             find_top_stores()
             print("--------------------------------\n")
         elif choice == 4:
-            break
+            log_deal_info()
         elif choice == 5:
             print("Goodbye!")
             break
