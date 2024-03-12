@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_store(listing):
+def get_store(listing: BeautifulSoup) -> str:
     """
     Extracts the store name from the given listing.
 
@@ -29,7 +29,6 @@ def display_latest_deals():
     """
     Displays deal information from the RedFlagDeals forum, sorted by the latest timestamp.
     """
-    url = "https://forums.redflagdeals.com/"
     response = requests.get("https://forums.redflagdeals.com/hot-deals-f9/")
     response.raise_for_status()
     soup = BeautifulSoup(response.content, "html.parser")
@@ -83,6 +82,9 @@ def display_latest_deals():
 
 
 def count_by_category():
+    """
+    Displays the number of deals for each category
+    """
     response = requests.get("https://forums.redflagdeals.com/hot-deals-f9/")
     response.raise_for_status()
     soup = BeautifulSoup(response.content, "html.parser")
@@ -101,10 +103,13 @@ def count_by_category():
     sorted_categories = sorted(category_count.items(), key=lambda x: x[1], reverse=True)
 
     for category, count in sorted_categories:
-        print(f"{category}: {count} deals")
+        print(f"{category}: {count} deal(s)")
 
 
 def find_top_stores():
+    """
+    Finds the top stores based on the number of deals they have posted.
+    """
     response = requests.get("https://forums.redflagdeals.com/hot-deals-f9/")
     response.raise_for_status()
     soup = BeautifulSoup(response.content, "html.parser")
@@ -127,13 +132,16 @@ def find_top_stores():
                 else:
                     store_count[store] = 1
 
-            for store, count in store_count.items():
-                print(f"{store}: {count} deals")
+            for store, count in sorted(store_count.items(), key=lambda x: x[1], reverse=True):
+                print(f"{store}: {count} deal(s)")
 
             break
 
 
 def log_deal_info():
+    """
+    Logs deal information from the RedFlagDeals forum to a text file.
+    """
     response = requests.get("https://forums.redflagdeals.com/hot-deals-f9/")
     response.raise_for_status()
     soup = BeautifulSoup(response.content, "html.parser")
@@ -147,7 +155,7 @@ def log_deal_info():
 
     categories_list = list(categories)
 
-    print("\nList of Catgeories:\n")
+    print("\nList of Categories:\n")
     for i, category in enumerate(categories_list):
         print(f"{i + 1}. {category}")
 
@@ -163,52 +171,27 @@ def log_deal_info():
             base_url = "https://forums.redflagdeals.com/"
 
             for listing in deals:
-                store = get_store(listing)
-
                 item_element = listing.select_one(".topic_title_link")
-                item = item_element.text.strip() if item_element else "N/A"
-
-                votes_element = listing.select_one(".total_count_selector")
-                votes = votes_element.text.strip() if votes_element else "N/A"
-
-                username_element = listing.select_one(".thread_meta_author")
-                username = username_element.text.strip() if username_element else "N/A"
-
-                timestamp_element = listing.select_one(".first-post-time")
-                timestamp = (
-                    timestamp_element.text.strip() if timestamp_element else "N/A"
-                )
 
                 category_element = listing.select_one(".thread_category a")
                 category = category_element.text.strip() if category_element else "N/A"
-
-                replies_element = listing.select_one(".posts")
-                replies = replies_element.text.strip() if replies_element else "N/A"
-
-                views_element = listing.select_one(".views")
-                views = views_element.text.strip() if views_element else "N/A"
 
                 url_element = item_element["href"] if item_element else "N/A"
                 url = base_url + url_element
 
                 if category == corresp_category:
                     with open("./log.txt", "a") as file:
-                        file.write(f"Store: {store}\n")
-                        file.write(f"Item: {item}\n")
-                        file.write(f"Votes: {votes}\n")
-                        file.write(f"Username: {username}\n")
-                        file.write(f"Timestamp: {timestamp}\n")
-                        file.write(f"Category: {category}\n")
-                        file.write(f"Replies: {replies}\n")
-                        file.write(f"Views: {views}\n")
-                        file.write(f"Url: {url}\n")
+                        file.write(f"URL: {url}\n")
                         file.write("-------------------------\n")
 
-            print("All the links have been logged sucessfully\n")
+            print("All the links have been logged successfully\n")
             break
 
 
 def print_menu():
+    """
+    Prints the main menu
+    """
     print("***** Web Scraping Adventure *****")
     print("1. Display Latest Deals")
     print("2. Analyze Deals by Category")
@@ -217,7 +200,16 @@ def print_menu():
     print("5. Exit")
 
 
-def get_number_input(prompt):
+def get_number_input(prompt: str) -> float:
+    """
+    Prompts the user to enter a number and returns it as a float.
+
+    Parameters:
+    prompt (str): The prompt to display to the user.
+
+    Raises:
+    ValueError: If the user enters an invalid number.
+    """
     while True:
         try:
             user_input = float(input(prompt))
@@ -227,6 +219,9 @@ def get_number_input(prompt):
 
 
 def main():
+    """
+    The main function
+    """
     while True:
         print_menu()
         choice = get_number_input("Enter your choice (1-5): ")
